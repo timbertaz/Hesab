@@ -133,6 +133,24 @@ input[type="text"].err{border-color:var(--red);animation:shake .3s ease}
 .log-del{display:flex;align-items:center;justify-content:center;width:32px;background:none;border:none;color:#555;cursor:pointer;font-size:16px;flex-shrink:0;transition:color .15s;padding:0;align-self:stretch}
 .log-del:hover{color:#e06060}
 .log-row{cursor:pointer}
+
+/* UPDATE TOAST */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(140px);background:#1e1e1e;border:1px solid var(--red);border-radius:6px;width:calc(100% - 32px);max-width:420px;z-index:200;transition:transform .4s cubic-bezier(.175,.885,.32,1.275);box-shadow:0 4px 24px rgba(0,0,0,.7);overflow:hidden}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast-top{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;user-select:none}
+.toast-dot{width:8px;height:8px;border-radius:50%;background:var(--red);flex-shrink:0;animation:pulse 1.4s infinite}
+.toast-title{font-family:"Barlow Condensed","Arial Narrow",Arial,sans-serif;font-size:14px;letter-spacing:1px;color:var(--white);flex:1}
+.toast-arrow{font-size:12px;color:var(--mid);transition:transform .25s}
+.toast.expanded .toast-arrow{transform:rotate(180deg)}
+.toast-body{max-height:0;overflow:hidden;transition:max-height .3s ease}
+.toast.expanded .toast-body{max-height:200px}
+.toast-changelog{padding:0 14px 12px;border-top:1px solid #333}
+.toast-changelog ul{list-style:none;padding:8px 0 10px;display:flex;flex-direction:column;gap:5px}
+.toast-changelog li{font-family:"Barlow Condensed","Arial Narrow",Arial,sans-serif;font-size:13px;color:#bbb;letter-spacing:.5px;padding-left:14px;position:relative}
+.toast-changelog li:before{content:">";position:absolute;left:0;color:var(--red)}
+.toast-foot{display:flex;justify-content:flex-end;padding:0 14px 12px}
+.toast-foot button{background:var(--red);border:none;color:#fff;font-family:"Barlow Condensed","Arial Narrow",Arial,sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:7px 16px;border-radius:3px;cursor:pointer}
+.toast-foot button:hover{filter:brightness(1.15)}
 </style>
 </head>
 <body>
@@ -190,20 +208,20 @@ input[type="text"].err{border-color:var(--red);animation:shake .3s ease}
         <input type="text" id="m-obj" placeholder="Objektnamn">
       </div>
       <div class="modal-row">
-        <label>Start tid (HH:MM:SS)</label>
-        <input type="text" id="m-start-time" placeholder="14:30:00">
+        <label>Start tid &nbsp;<small style="color:#555;font-weight:400;letter-spacing:0">10 → 10:00  &nbsp; 1030 → 10:30</small></label>
+        <input type="text" id="m-start-time" placeholder="10:00" maxlength="8">
       </div>
       <div class="modal-row">
-        <label>Start datum (YYYY-MM-DD)</label>
-        <input type="text" id="m-start-date" placeholder="2026-03-03">
+        <label>Start datum &nbsp;<small style="color:#555;font-weight:400;letter-spacing:0">0303 → 2026-03-03</small></label>
+        <input type="text" id="m-start-date" placeholder="2026-03-03" maxlength="10">
       </div>
       <div class="modal-row">
-        <label>Stopp tid (HH:MM:SS)</label>
-        <input type="text" id="m-stopp-time" placeholder="15:45:00">
+        <label>Stopp tid &nbsp;<small style="color:#555;font-weight:400;letter-spacing:0">10 → 10:00  &nbsp; 1030 → 10:30</small></label>
+        <input type="text" id="m-stopp-time" placeholder="10:00" maxlength="8">
       </div>
       <div class="modal-row">
-        <label>Stopp datum (YYYY-MM-DD)</label>
-        <input type="text" id="m-stopp-date" placeholder="2026-03-03">
+        <label>Stopp datum &nbsp;<small style="color:#555;font-weight:400;letter-spacing:0">0303 → 2026-03-03</small></label>
+        <input type="text" id="m-stopp-date" placeholder="2026-03-03" maxlength="10">
       </div>
     </div>
     <div class="modal-foot">
@@ -217,8 +235,59 @@ input[type="text"].err{border-color:var(--red);animation:shake .3s ease}
 
 <script>
 // Register service worker for PWA
+// ── App version & changelog ──
+var VERSION = '1.0';
+var WHATS_NEW = [
+  'Tidsregistrering med Start och Stopp',
+  'Redigera och radera enskilda poster',
+  'Snabb tidsredigering - skriv 1030 for 10:30',
+  'Total tid summeras automatiskt',
+  'PDF export med alla poster',
+  'Fungerar offline som installerad app'
+];
+
+function showToast() {
+  var toast = document.getElementById('update-toast');
+  var ver   = document.getElementById('toast-ver');
+  var list  = document.getElementById('toast-changes');
+  if (!toast) return;
+  if (ver) ver.textContent = 'v' + VERSION;
+  if (list) {
+    list.innerHTML = WHATS_NEW.map(function(n) {
+      return '<li>' + n + '</li>';
+    }).join('');
+  }
+  setTimeout(function() { toast.classList.add('show'); }, 500);
+}
+
+function toggleToast() {
+  document.getElementById('update-toast').classList.toggle('expanded');
+}
+
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js').catch(function(){});
+  navigator.serviceWorker.register('sw.js').then(function(reg) {
+    reg.update();
+    reg.addEventListener('updatefound', function() {
+      var newWorker = reg.installing;
+      newWorker.addEventListener('statechange', function() {
+        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+          showToast();
+        }
+      });
+    });
+  }).catch(function(){});
+}
+
+function reloadApp() {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistration().then(function(reg) {
+      if (reg && reg.waiting) {
+        // Tell the waiting SW to take over
+        reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+      }
+    });
+  }
+  window.location.reload();
 }
 
 var S = [];
@@ -389,13 +458,50 @@ function closeModal() {
   editIdx = null;
 }
 
+function parseTime(v) {
+  v = v.trim().replace(/[^0-9:]/g, '');
+  if (!v) return '';
+  if (v.indexOf(':') !== -1) {
+    var parts = v.split(':');
+    var h = parts[0].padStart(2, '0');
+    var m = (parts[1] || '00').padStart(2, '0');
+    var s = (parts[2] || '00').padStart(2, '0');
+    return h + ':' + m + ':' + s;
+  }
+  // pure digits: 8=HH, 1030=10:30, 103045=10:30:45
+  var d = v.padStart(v.length <= 2 ? 2 : v.length, '0');
+  if (d.length <= 2) return d.padStart(2,'0') + ':00:00';
+  if (d.length <= 4) return d.slice(0,2) + ':' + d.slice(2).padEnd(2,'0') + ':00';
+  return d.slice(0,2) + ':' + d.slice(2,4) + ':' + d.slice(4,6).padEnd(2,'0');
+}
+
+function parseDate(v) {
+  v = v.trim().replace(/[^0-9-]/g, '');
+  if (!v) return '';
+  var today = new Date();
+  var yyyy = String(today.getFullYear());
+  if (v.indexOf('-') !== -1) {
+    // already has dashes - make sure it is YYYY-MM-DD
+    var parts = v.split('-');
+    if (parts[0].length === 4) return v; // already correct
+    // might be DD-MM-YYYY
+    if (parts[2] && parts[2].length === 4) return parts[2]+'-'+parts[1].padStart(2,'0')+'-'+parts[0].padStart(2,'0');
+    return v;
+  }
+  // pure digits DDMM -> YYYY-MM-DD
+  if (v.length === 4) return yyyy + '-' + v.slice(2,4).padStart(2,'0') + '-' + v.slice(0,2).padStart(2,'0');
+  // DDMMYYYY
+  if (v.length === 8) return v.slice(4,8) + '-' + v.slice(2,4).padStart(2,'0') + '-' + v.slice(0,2).padStart(2,'0');
+  return v;
+}
+
 function saveEdit() {
   if (editIdx === null) return;
   var obj       = document.getElementById('m-obj').value.trim();
-  var startTime = document.getElementById('m-start-time').value.trim();
-  var startDate = document.getElementById('m-start-date').value.trim();
-  var stoppTime = document.getElementById('m-stopp-time').value.trim();
-  var stoppDate = document.getElementById('m-stopp-date').value.trim();
+  var startTime = parseTime(document.getElementById('m-start-time').value);
+  var startDate = parseDate(document.getElementById('m-start-date').value);
+  var stoppTime = parseTime(document.getElementById('m-stopp-time').value);
+  var stoppDate = parseDate(document.getElementById('m-stopp-date').value);
   if (!obj) { document.getElementById('m-obj').classList.add('err'); setTimeout(function(){document.getElementById('m-obj').classList.remove('err');},600); return; }
   S[editIdx].obj   = obj;
   S[editIdx].start = (startTime && startDate) ? { time: startTime, date: startDate } : null;
@@ -453,12 +559,46 @@ function exportPDF() {
     + 'td{padding:8px 12px;border-bottom:1px solid #e0e0e0}'
     + 'tr:nth-child(even) td{background:#f7f7f7}'
     + '.dur{color:#b07800;font-weight:bold}'
-    + '</style></head><body>'
+    + '
+/* UPDATE TOAST */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(140px);background:#1e1e1e;border:1px solid var(--red);border-radius:6px;width:calc(100% - 32px);max-width:420px;z-index:200;transition:transform .4s cubic-bezier(.175,.885,.32,1.275);box-shadow:0 4px 24px rgba(0,0,0,.7);overflow:hidden}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast-top{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;user-select:none}
+.toast-dot{width:8px;height:8px;border-radius:50%;background:var(--red);flex-shrink:0;animation:pulse 1.4s infinite}
+.toast-title{font-family:"Barlow Condensed","Arial Narrow",Arial,sans-serif;font-size:14px;letter-spacing:1px;color:var(--white);flex:1}
+.toast-arrow{font-size:12px;color:var(--mid);transition:transform .25s}
+.toast.expanded .toast-arrow{transform:rotate(180deg)}
+.toast-body{max-height:0;overflow:hidden;transition:max-height .3s ease}
+.toast.expanded .toast-body{max-height:200px}
+.toast-changelog{padding:0 14px 12px;border-top:1px solid #333}
+.toast-changelog ul{list-style:none;padding:8px 0 10px;display:flex;flex-direction:column;gap:5px}
+.toast-changelog li{font-family:"Barlow Condensed","Arial Narrow",Arial,sans-serif;font-size:13px;color:#bbb;letter-spacing:.5px;padding-left:14px;position:relative}
+.toast-changelog li:before{content:">";position:absolute;left:0;color:var(--red)}
+.toast-foot{display:flex;justify-content:flex-end;padding:0 14px 12px}
+.toast-foot button{background:var(--red);border:none;color:#fff;font-family:"Barlow Condensed","Arial Narrow",Arial,sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:7px 16px;border-radius:3px;cursor:pointer}
+.toast-foot button:hover{filter:brightness(1.15)}
+</style></head><body>'
     + '<h1>HESAB &mdash; Tidsregistrering</h1>'
     + '<p>Exporterad: ' + new Date().toLocaleString('sv-SE') + ' | ' + S.length + ' objekt | Total tid: ' + totalTime() + '</p>'
     + '<table><thead><tr><th>#</th><th>Objekt</th><th>Start</th><th>Stopp</th><th>Tid</th></tr></thead>'
     + '<tbody>' + rows + '</tbody></table>'
-    + '</body></html>';
+    + '
+<div class="toast" id="update-toast">
+  <div class="toast-top" onclick="toggleToast()">
+    <div class="toast-dot"></div>
+    <div class="toast-title">Ny version tillganglig <span id="toast-ver"></span></div>
+    <span class="toast-arrow">&#9660;</span>
+  </div>
+  <div class="toast-body">
+    <div class="toast-changelog">
+      <ul id="toast-changes"></ul>
+    </div>
+    <div class="toast-foot">
+      <button onclick="reloadApp()">Installera &amp; starta om</button>
+    </div>
+  </div>
+</div>
+</body></html>';
   var w = window.open('', '_blank');
   if (w) { w.document.write(htm); w.document.close(); w.print(); }
 }
@@ -480,5 +620,21 @@ document.getElementById('oi').addEventListener('keydown', function(e) { if (e.ke
 render();
 updateStatus();
 </script>
+
+<div class="toast" id="update-toast">
+  <div class="toast-top" onclick="toggleToast()">
+    <div class="toast-dot"></div>
+    <div class="toast-title">Ny version tillganglig <span id="toast-ver"></span></div>
+    <span class="toast-arrow">&#9660;</span>
+  </div>
+  <div class="toast-body">
+    <div class="toast-changelog">
+      <ul id="toast-changes"></ul>
+    </div>
+    <div class="toast-foot">
+      <button onclick="reloadApp()">Installera &amp; starta om</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>

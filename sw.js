@@ -39,3 +39,10 @@ self.addEventListener('fetch', function(e) {
     })
   );
 });
+
+// Allow the app to trigger activation of waiting SW
+self.addEventListener('message', function(e) {
+  if (e.data && e.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
