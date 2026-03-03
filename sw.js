@@ -1,4 +1,4 @@
-const CACHE = 'hesab-v1';
+const CACHE = 'hesab-v1.1';
 const FILES = [
   './hesab.html',
   './manifest.json'
@@ -40,7 +40,6 @@ self.addEventListener('fetch', function(e) {
   );
 });
 
-// Allow the app to trigger activation of waiting SW
 self.addEventListener('message', function(e) {
   if (e.data && e.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
