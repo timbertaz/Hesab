@@ -4,6 +4,13 @@ const FILES = [
   './manifest.json'
 ];
 
+var VERSION = '1.2';
+var WHATS_NEW = [
+  'Export inkluderar nu total tid',
+  'Snabb tidsredigering - skriv 1030 for 10:30',
+  'Redigera och radera enskilda poster'
+];
+
 self.addEventListener('install', function(e) {
   e.waitUntil(
     caches.open(CACHE).then(function(cache) {
