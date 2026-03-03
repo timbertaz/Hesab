@@ -234,8 +234,6 @@ input[type="text"].err{border-color:var(--red);animation:shake .3s ease}
 </main>
 
 <script>
-// Register service worker for PWA
-// ── App version & changelog ──
 var VERSION = '1.0';
 var WHATS_NEW = [
   'Tidsregistrering med Start och Stopp',
@@ -246,59 +244,15 @@ var WHATS_NEW = [
   'Fungerar offline som installerad app'
 ];
 
-function showToast() {
-  var toast = document.getElementById('update-toast');
-  var ver   = document.getElementById('toast-ver');
-  var list  = document.getElementById('toast-changes');
-  if (!toast) return;
-  if (ver) ver.textContent = 'v' + VERSION;
-  if (list) {
-    list.innerHTML = WHATS_NEW.map(function(n) {
-      return '<li>' + n + '</li>';
-    }).join('');
-  }
-  setTimeout(function() { toast.classList.add('show'); }, 500);
-}
-
-function toggleToast() {
-  document.getElementById('update-toast').classList.toggle('expanded');
-}
-
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js').then(function(reg) {
-    reg.update();
-    reg.addEventListener('updatefound', function() {
-      var newWorker = reg.installing;
-      newWorker.addEventListener('statechange', function() {
-        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-          showToast();
-        }
-      });
-    });
-  }).catch(function(){});
-}
-
-function reloadApp() {
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.getRegistration().then(function(reg) {
-      if (reg && reg.waiting) {
-        // Tell the waiting SW to take over
-        reg.waiting.postMessage({ type: 'SKIP_WAITING' });
-      }
-    });
-  }
-  window.location.reload();
-}
-
 var S = [];
 var editIdx = null;
 try { S = JSON.parse(localStorage.getItem('hesab_v2') || '[]'); } catch(e) {}
 function save() { try { localStorage.setItem('hesab_v2', JSON.stringify(S)); } catch(e) {} }
 
-// Clock
+// ── Clock ──
 function updateClock() {
   var d = new Date();
-  var p = function(n) { return String(n).padStart(2, '0'); };
+  var p = function(n) { return String(n).padStart(2,'0'); };
   var el = document.getElementById('clock-time');
   if (el) el.innerHTML = p(d.getHours()) + '<span class="colon">:</span>' + p(d.getMinutes()) + '<span class="colon">:</span>' + p(d.getSeconds());
   var days = ['Sondag','Mandag','Tisdag','Onsdag','Torsdag','Fredag','Lordag'];
@@ -309,31 +263,25 @@ function updateClock() {
 updateClock();
 setInterval(updateClock, 1000);
 
+// ── Helpers ──
 function nowP() {
   var d = new Date();
-  var p = function(n) { return String(n).padStart(2, '0'); };
-  return {
-    time: p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds()),
-    date: d.getFullYear() + '-' + p(d.getMonth()+1) + '-' + p(d.getDate())
-  };
+  var p = function(n) { return String(n).padStart(2,'0'); };
+  return { time: p(d.getHours())+':'+p(d.getMinutes())+':'+p(d.getSeconds()), date: d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate()) };
 }
 
-function esc(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 function calcDur(a, b) {
   try {
-    var s = new Date(a.date + 'T' + a.time);
-    var e = new Date(b.date + 'T' + b.time);
-    var diff = Math.round((e - s) / 1000);
+    var s = new Date(a.date+'T'+a.time);
+    var e = new Date(b.date+'T'+b.time);
+    var diff = Math.round((e-s)/1000);
     if (diff < 0) return '';
-    var h = Math.floor(diff / 3600);
-    var m = Math.floor((diff % 3600) / 60);
-    var sec = diff % 60;
-    if (h > 0) return h + 'h ' + String(m).padStart(2,'0') + 'm';
-    if (m > 0) return m + 'm ' + String(sec).padStart(2,'0') + 's';
-    return sec + 's';
+    var h = Math.floor(diff/3600), m = Math.floor((diff%3600)/60), sec = diff%60;
+    if (h > 0) return h+'h '+String(m).padStart(2,'0')+'m';
+    if (m > 0) return m+'m '+String(sec).padStart(2,'0')+'s';
+    return sec+'s';
   } catch(e) { return ''; }
 }
 
@@ -342,101 +290,100 @@ function totalTime() {
   for (var i = 0; i < S.length; i++) {
     if (S[i].start && S[i].stopp) {
       try {
-        var a = new Date(S[i].start.date + 'T' + S[i].start.time);
-        var b = new Date(S[i].stopp.date + 'T' + S[i].stopp.time);
-        var diff = Math.round((b - a) / 1000);
+        var a = new Date(S[i].start.date+'T'+S[i].start.time);
+        var b = new Date(S[i].stopp.date+'T'+S[i].stopp.time);
+        var diff = Math.round((b-a)/1000);
         if (diff > 0) total += diff;
       } catch(e) {}
     }
   }
   if (total === 0) return '0m';
-  var h = Math.floor(total / 3600);
-  var m = Math.floor((total % 3600) / 60);
-  var s = total % 60;
-  if (h > 0) return h + 'h ' + String(m).padStart(2,'0') + 'm';
-  if (m > 0) return m + 'm ' + String(s).padStart(2,'0') + 's';
-  return s + 's';
+  var h = Math.floor(total/3600), m = Math.floor((total%3600)/60), s = total%60;
+  if (h > 0) return h+'h '+String(m).padStart(2,'0')+'m';
+  if (m > 0) return m+'m '+String(s).padStart(2,'0')+'s';
+  return s+'s';
 }
 
+function parseTime(v) {
+  v = v.trim().replace(/[^0-9:]/g,'');
+  if (!v) return '';
+  if (v.indexOf(':') !== -1) {
+    var parts = v.split(':');
+    return parts[0].padStart(2,'0')+':'+(parts[1]||'00').padStart(2,'0')+':'+(parts[2]||'00').padStart(2,'0');
+  }
+  if (v.length <= 2) return v.padStart(2,'0')+':00:00';
+  if (v.length <= 4) return v.slice(0,2)+':'+v.slice(2).padEnd(2,'0')+':00';
+  return v.slice(0,2)+':'+v.slice(2,4)+':'+v.slice(4,6).padEnd(2,'0');
+}
+
+function parseDate(v) {
+  v = v.trim().replace(/[^0-9-]/g,'');
+  if (!v) return '';
+  var yyyy = String(new Date().getFullYear());
+  if (v.indexOf('-') !== -1) {
+    var p = v.split('-');
+    if (p[0].length === 4) return v;
+    if (p.length === 3 && p[2].length === 4) return p[2]+'-'+p[1].padStart(2,'0')+'-'+p[0].padStart(2,'0');
+    return v;
+  }
+  if (v.length === 4) return yyyy+'-'+v.slice(2,4).padStart(2,'0')+'-'+v.slice(0,2).padStart(2,'0');
+  if (v.length === 8) return v.slice(4,8)+'-'+v.slice(2,4).padStart(2,'0')+'-'+v.slice(0,2).padStart(2,'0');
+  return v;
+}
+
+// ── Stamp ──
 function stamp(type) {
   var inp = document.getElementById('oi');
   var obj = inp.value.trim();
-  if (!obj) {
-    inp.classList.add('err');
-    inp.focus();
-    setTimeout(function() { inp.classList.remove('err'); }, 600);
-    return;
-  }
+  if (!obj) { inp.classList.add('err'); inp.focus(); setTimeout(function(){ inp.classList.remove('err'); },600); return; }
   var t = nowP();
   if (type === 'START') {
-    S.unshift({ obj: obj, start: t, stopp: null });
+    S.unshift({ obj:obj, start:t, stopp:null });
   } else {
     var found = false;
-    for (var i = 0; i < S.length; i++) {
-      if (!S[i].stopp) { S[i].stopp = t; found = true; break; }
-    }
-    if (!found) S.unshift({ obj: obj, start: null, stopp: t });
+    for (var i = 0; i < S.length; i++) { if (!S[i].stopp) { S[i].stopp=t; found=true; break; } }
+    if (!found) S.unshift({ obj:obj, start:null, stopp:t });
   }
-  save();
-  updateStatus();
-  render();
+  save(); updateStatus(); render();
 }
 
+// ── Status ──
 function updateStatus() {
   var dot = document.getElementById('sd');
   var txt = document.getElementById('st');
   var open = null;
-  for (var i = 0; i < S.length; i++) {
-    if (!S[i].stopp) { open = S[i]; break; }
-  }
-  if (open) {
-    dot.className = 'dot on';
-    txt.textContent = 'Aktiv: ' + open.obj;
-    txt.style.color = '#e0e0e0';
-  } else {
-    dot.className = 'dot';
-    txt.textContent = 'Ingen aktiv session';
-    txt.style.color = '';
-  }
+  for (var i = 0; i < S.length; i++) { if (!S[i].stopp) { open=S[i]; break; } }
+  if (open) { dot.className='dot on'; txt.textContent='Aktiv: '+open.obj; txt.style.color='#e0e0e0'; }
+  else { dot.className='dot'; txt.textContent='Ingen aktiv session'; txt.style.color=''; }
 }
 
+// ── Render ──
 function makeTimeRow(tag, cls, t) {
-  var row = document.createElement('div');
-  row.className = 'log-time-row';
-  row.innerHTML = '<span class="tag ' + cls + '">' + tag + '</span>'
-    + '<span class="t-time">' + t.time + '</span>'
-    + '<span class="t-date">' + t.date + '</span>';
-  return row.outerHTML;
+  var el = document.createElement('div');
+  el.className = 'log-time-row';
+  el.innerHTML = '<span class="tag '+cls+'">'+tag+'</span><span class="t-time">'+t.time+'</span><span class="t-date">'+t.date+'</span>';
+  return el.outerHTML;
 }
 
 function render() {
   var list = document.getElementById('ll');
   document.getElementById('ec').textContent = S.length;
   document.getElementById('tc').textContent = totalTime();
-  if (!S.length) {
-    list.innerHTML = '<div class="empty">Inga registreringar annu</div>';
-    return;
-  }
+  if (!S.length) { list.innerHTML = '<div class="empty">Inga registreringar annu</div>'; return; }
   var html = '';
   for (var i = 0; i < S.length; i++) {
-    var s = S[i];
-    var num = S.length - i;
-    var d = (s.start && s.stopp) ? calcDur(s.start, s.stopp) : '';
+    var s=S[i], num=S.length-i, d=(s.start&&s.stopp)?calcDur(s.start,s.stopp):'';
     var times = '<div class="log-times">';
-    if (s.start) times += makeTimeRow('START', 'tag-start', s.start);
-    if (s.stopp) times += makeTimeRow('STOPP', 'tag-stopp', s.stopp);
-    if (s.start && !s.stopp) times += '<span class="open-badge">PAGAR</span>';
+    if (s.start) times += makeTimeRow('START','tag-start',s.start);
+    if (s.stopp) times += makeTimeRow('STOPP','tag-stopp',s.stopp);
+    if (s.start&&!s.stopp) times += '<span class="open-badge">PAGAR</span>';
     times += '</div>';
-    var durClass = d ? 'log-dur has-dur' : 'log-dur';
-    html += '<div class="log-row" data-idx="' + i + '" onclick="openEdit(' + i + ')">'
-      + '<div class="log-num">' + num + '</div>'
-      + '<div class="log-body">'
-        + '<div class="log-obj-name">' + esc(s.obj) + '</div>'
-        + times
-      + '</div>'
-      + '<div class="' + durClass + '">' + (d || '&mdash;') + '</div>'
-      + '<button class="log-del" onclick="deleteEntry(event,' + i + ')">&#10005;</button>'
-      + '</div>';
+    html += '<div class="log-row" onclick="openEdit('+i+')">'
+      +'<div class="log-num">'+num+'</div>'
+      +'<div class="log-body"><div class="log-obj-name">'+esc(s.obj)+'</div>'+times+'</div>'
+      +'<div class="'+(d?'log-dur has-dur':'log-dur')+'">'+(d||'&mdash;')+'</div>'
+      +'<button class="log-del" onclick="deleteEntry(event,'+i+')">&#10005;</button>'
+      +'</div>';
   }
   list.innerHTML = html;
 }
@@ -445,58 +392,18 @@ function render() {
 function openEdit(idx) {
   editIdx = idx;
   var s = S[idx];
-  document.getElementById('m-obj').value        = s.obj || '';
-  document.getElementById('m-start-time').value = s.start ? s.start.time : '';
-  document.getElementById('m-start-date').value = s.start ? s.start.date : '';
-  document.getElementById('m-stopp-time').value = s.stopp ? s.stopp.time : '';
-  document.getElementById('m-stopp-date').value = s.stopp ? s.stopp.date : '';
+  document.getElementById('m-obj').value        = s.obj||'';
+  document.getElementById('m-start-time').value = s.start?s.start.time:'';
+  document.getElementById('m-start-date').value = s.start?s.start.date:'';
+  document.getElementById('m-stopp-time').value = s.stopp?s.stopp.time:'';
+  document.getElementById('m-stopp-date').value = s.stopp?s.stopp.date:'';
   document.getElementById('modal').classList.add('open');
 }
 
-function closeModal() {
-  document.getElementById('modal').classList.remove('open');
-  editIdx = null;
-}
-
-function parseTime(v) {
-  v = v.trim().replace(/[^0-9:]/g, '');
-  if (!v) return '';
-  if (v.indexOf(':') !== -1) {
-    var parts = v.split(':');
-    var h = parts[0].padStart(2, '0');
-    var m = (parts[1] || '00').padStart(2, '0');
-    var s = (parts[2] || '00').padStart(2, '0');
-    return h + ':' + m + ':' + s;
-  }
-  // pure digits: 8=HH, 1030=10:30, 103045=10:30:45
-  var d = v.padStart(v.length <= 2 ? 2 : v.length, '0');
-  if (d.length <= 2) return d.padStart(2,'0') + ':00:00';
-  if (d.length <= 4) return d.slice(0,2) + ':' + d.slice(2).padEnd(2,'0') + ':00';
-  return d.slice(0,2) + ':' + d.slice(2,4) + ':' + d.slice(4,6).padEnd(2,'0');
-}
-
-function parseDate(v) {
-  v = v.trim().replace(/[^0-9-]/g, '');
-  if (!v) return '';
-  var today = new Date();
-  var yyyy = String(today.getFullYear());
-  if (v.indexOf('-') !== -1) {
-    // already has dashes - make sure it is YYYY-MM-DD
-    var parts = v.split('-');
-    if (parts[0].length === 4) return v; // already correct
-    // might be DD-MM-YYYY
-    if (parts[2] && parts[2].length === 4) return parts[2]+'-'+parts[1].padStart(2,'0')+'-'+parts[0].padStart(2,'0');
-    return v;
-  }
-  // pure digits DDMM -> YYYY-MM-DD
-  if (v.length === 4) return yyyy + '-' + v.slice(2,4).padStart(2,'0') + '-' + v.slice(0,2).padStart(2,'0');
-  // DDMMYYYY
-  if (v.length === 8) return v.slice(4,8) + '-' + v.slice(2,4).padStart(2,'0') + '-' + v.slice(0,2).padStart(2,'0');
-  return v;
-}
+function closeModal() { document.getElementById('modal').classList.remove('open'); editIdx=null; }
 
 function saveEdit() {
-  if (editIdx === null) return;
+  if (editIdx===null) return;
   var obj       = document.getElementById('m-obj').value.trim();
   var startTime = parseTime(document.getElementById('m-start-time').value);
   var startDate = parseDate(document.getElementById('m-start-date').value);
@@ -504,121 +411,102 @@ function saveEdit() {
   var stoppDate = parseDate(document.getElementById('m-stopp-date').value);
   if (!obj) { document.getElementById('m-obj').classList.add('err'); setTimeout(function(){document.getElementById('m-obj').classList.remove('err');},600); return; }
   S[editIdx].obj   = obj;
-  S[editIdx].start = (startTime && startDate) ? { time: startTime, date: startDate } : null;
-  S[editIdx].stopp = (stoppTime && stoppDate) ? { time: stoppTime, date: stoppDate } : null;
-  save();
-  updateStatus();
-  render();
-  closeModal();
+  S[editIdx].start = (startTime&&startDate)?{time:startTime,date:startDate}:null;
+  S[editIdx].stopp = (stoppTime&&stoppDate)?{time:stoppTime,date:stoppDate}:null;
+  save(); updateStatus(); render(); closeModal();
 }
 
 function deleteEntry(e, idx) {
   e.stopPropagation();
   if (!confirm('Radera denna post?')) return;
-  S.splice(idx, 1);
-  save();
-  updateStatus();
-  render();
+  S.splice(idx,1); save(); updateStatus(); render();
 }
 
-// Close modal on overlay click
-document.getElementById('modal').addEventListener('click', function(e) {
-  if (e.target === this) closeModal();
-});
+document.getElementById('modal').addEventListener('click', function(e){ if(e.target===this) closeModal(); });
 
+// ── Clear & Export ──
 function clearLog() {
-  if (!S.length || !confirm('Rensa alla registreringar?')) return;
-  S = [];
-  save();
-  updateStatus();
-  render();
+  if (!S.length||!confirm('Rensa alla registreringar?')) return;
+  S=[]; save(); updateStatus(); render();
 }
 
 function exportPDF() {
   if (!S.length) return;
-  var rev = S.slice().reverse();
-  var rows = '';
-  for (var i = 0; i < rev.length; i++) {
-    var s = rev[i];
-    var d = (s.start && s.stopp) ? calcDur(s.start, s.stopp) : '&mdash;';
-    rows += '<tr>'
-      + '<td>' + (i+1) + '</td>'
-      + '<td>' + esc(s.obj) + '</td>'
-      + '<td>' + (s.start ? s.start.time + ' ' + s.start.date : '&mdash;') + '</td>'
-      + '<td>' + (s.stopp ? s.stopp.time + ' ' + s.stopp.date : 'Pagar') + '</td>'
-      + '<td class="dur">' + d + '</td>'
-      + '</tr>';
+  var rev=S.slice().reverse(), rows='';
+  for (var i=0;i<rev.length;i++) {
+    var s=rev[i], d=(s.start&&s.stopp)?calcDur(s.start,s.stopp):'&mdash;';
+    rows += '<tr><td>'+(i+1)+'</td><td>'+esc(s.obj)+'</td>'
+      +'<td>'+(s.start?s.start.time+' '+s.start.date:'&mdash;')+'</td>'
+      +'<td>'+(s.stopp?s.stopp.time+' '+s.stopp.date:'Pagar')+'</td>'
+      +'<td class="dur">'+d+'</td></tr>';
   }
   var htm = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>HESAB</title>'
-    + '<style>'
-    + 'body{font-family:Arial,sans-serif;font-size:12px;margin:30px;color:#111}'
-    + 'h1{font-size:22px;margin-bottom:6px}'
-    + 'p{color:#666;font-size:11px;margin-bottom:20px}'
-    + 'table{width:100%;border-collapse:collapse}'
-    + 'th{background:#cc1f1f;color:#fff;padding:9px 12px;text-align:left;font-size:11px;text-transform:uppercase}'
-    + 'td{padding:8px 12px;border-bottom:1px solid #e0e0e0}'
-    + 'tr:nth-child(even) td{background:#f7f7f7}'
-    + '.dur{color:#b07800;font-weight:bold}'
-    + '
-/* UPDATE TOAST */
-.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(140px);background:#1e1e1e;border:1px solid var(--red);border-radius:6px;width:calc(100% - 32px);max-width:420px;z-index:200;transition:transform .4s cubic-bezier(.175,.885,.32,1.275);box-shadow:0 4px 24px rgba(0,0,0,.7);overflow:hidden}
-.toast.show{transform:translateX(-50%) translateY(0)}
-.toast-top{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;user-select:none}
-.toast-dot{width:8px;height:8px;border-radius:50%;background:var(--red);flex-shrink:0;animation:pulse 1.4s infinite}
-.toast-title{font-family:"Barlow Condensed","Arial Narrow",Arial,sans-serif;font-size:14px;letter-spacing:1px;color:var(--white);flex:1}
-.toast-arrow{font-size:12px;color:var(--mid);transition:transform .25s}
-.toast.expanded .toast-arrow{transform:rotate(180deg)}
-.toast-body{max-height:0;overflow:hidden;transition:max-height .3s ease}
-.toast.expanded .toast-body{max-height:200px}
-.toast-changelog{padding:0 14px 12px;border-top:1px solid #333}
-.toast-changelog ul{list-style:none;padding:8px 0 10px;display:flex;flex-direction:column;gap:5px}
-.toast-changelog li{font-family:"Barlow Condensed","Arial Narrow",Arial,sans-serif;font-size:13px;color:#bbb;letter-spacing:.5px;padding-left:14px;position:relative}
-.toast-changelog li:before{content:">";position:absolute;left:0;color:var(--red)}
-.toast-foot{display:flex;justify-content:flex-end;padding:0 14px 12px}
-.toast-foot button{background:var(--red);border:none;color:#fff;font-family:"Barlow Condensed","Arial Narrow",Arial,sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:7px 16px;border-radius:3px;cursor:pointer}
-.toast-foot button:hover{filter:brightness(1.15)}
-</style></head><body>'
-    + '<h1>HESAB &mdash; Tidsregistrering</h1>'
-    + '<p>Exporterad: ' + new Date().toLocaleString('sv-SE') + ' | ' + S.length + ' objekt | Total tid: ' + totalTime() + '</p>'
-    + '<table><thead><tr><th>#</th><th>Objekt</th><th>Start</th><th>Stopp</th><th>Tid</th></tr></thead>'
-    + '<tbody>' + rows + '</tbody></table>'
-    + '
-<div class="toast" id="update-toast">
-  <div class="toast-top" onclick="toggleToast()">
-    <div class="toast-dot"></div>
-    <div class="toast-title">Ny version tillganglig <span id="toast-ver"></span></div>
-    <span class="toast-arrow">&#9660;</span>
-  </div>
-  <div class="toast-body">
-    <div class="toast-changelog">
-      <ul id="toast-changes"></ul>
-    </div>
-    <div class="toast-foot">
-      <button onclick="reloadApp()">Installera &amp; starta om</button>
-    </div>
-  </div>
-</div>
-</body></html>';
-  var w = window.open('', '_blank');
-  if (w) { w.document.write(htm); w.document.close(); w.print(); }
+    +'<style>body{font-family:Arial,sans-serif;font-size:12px;margin:30px;color:#111}'
+    +'h1{font-size:22px;margin-bottom:6px}p{color:#666;font-size:11px;margin-bottom:20px}'
+    +'table{width:100%;border-collapse:collapse}'
+    +'th{background:#cc1f1f;color:#fff;padding:9px 12px;text-align:left;font-size:11px;text-transform:uppercase}'
+    +'td{padding:8px 12px;border-bottom:1px solid #e0e0e0}'
+    +'tr:nth-child(even) td{background:#f7f7f7}.dur{color:#b07800;font-weight:bold}'
+    +'</style></head><body>'
+    +'<h1>HESAB &mdash; Tidsregistrering</h1>'
+    +'<p>Exporterad: '+new Date().toLocaleString('sv-SE')+' | '+S.length+' objekt | Total tid: '+totalTime()+'</p>'
+    +'<table><thead><tr><th>#</th><th>Objekt</th><th>Start</th><th>Stopp</th><th>Tid</th></tr></thead>'
+    +'<tbody>'+rows+'</tbody></table></body></html>';
+  var w=window.open('','_blank');
+  if(w){w.document.write(htm);w.document.close();w.print();}
 }
 
-document.getElementById('btn-start').addEventListener('click', function() { stamp('START'); });
-document.getElementById('btn-stopp').addEventListener('click', function() { stamp('STOPP'); });
+// ── Event listeners ──
+document.getElementById('btn-start').addEventListener('click', function(){ stamp('START'); });
+document.getElementById('btn-stopp').addEventListener('click', function(){ stamp('STOPP'); });
 document.getElementById('btn-clear').addEventListener('click', clearLog);
 document.getElementById('btn-export').addEventListener('click', exportPDF);
 document.getElementById('m-save').addEventListener('click', saveEdit);
 document.getElementById('m-cancel').addEventListener('click', closeModal);
-document.getElementById('m-delete').addEventListener('click', function() {
-  if (editIdx === null) return;
-  if (!confirm('Radera denna post?')) return;
-  S.splice(editIdx, 1);
-  save(); updateStatus(); render(); closeModal();
+document.getElementById('m-delete').addEventListener('click', function(){
+  if(editIdx===null) return;
+  if(!confirm('Radera denna post?')) return;
+  S.splice(editIdx,1); save(); updateStatus(); render(); closeModal();
 });
-document.getElementById('oi').addEventListener('keydown', function(e) { if (e.key === 'Enter') stamp('START'); });
+document.getElementById('oi').addEventListener('keydown', function(e){ if(e.key==='Enter') stamp('START'); });
 
 render();
 updateStatus();
+
+// ── Toast ──
+function showToast() {
+  var toast = document.getElementById('update-toast');
+  var ver   = document.getElementById('toast-ver');
+  var list  = document.getElementById('toast-changes');
+  if (!toast) return;
+  if (ver) ver.textContent = 'v'+VERSION;
+  if (list) list.innerHTML = WHATS_NEW.map(function(n){ return '<li>'+n+'</li>'; }).join('');
+  setTimeout(function(){ toast.classList.add('show'); }, 500);
+}
+
+function toggleToast() { document.getElementById('update-toast').classList.toggle('expanded'); }
+
+function reloadApp() {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistration().then(function(reg){
+      if (reg&&reg.waiting) reg.waiting.postMessage({type:'SKIP_WAITING'});
+    });
+  }
+  window.location.reload();
+}
+
+// ── Service Worker ──
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').then(function(reg){
+    reg.update();
+    reg.addEventListener('updatefound', function(){
+      var nw = reg.installing;
+      nw.addEventListener('statechange', function(){
+        if (nw.state==='installed' && navigator.serviceWorker.controller) showToast();
+      });
+    });
+  }).catch(function(){});
+}
 </script>
 
 <div class="toast" id="update-toast">
