@@ -1,11 +1,11 @@
 {
-  "name": "HESAB Tidsregistrering",
+  "name": "HESAB",
   "short_name": "HESAB",
-  "description": "Hjul & Entreprenad Service - Tidsregistrering",
-  "start_url": "./hesab.html",
+  "description": "Kalender och tidsregistrering",
+  "start_url": "./hesab-app.html",
   "display": "standalone",
-  "background_color": "#0e0e0e",
-  "theme_color": "#cc1f1f",
+  "background_color": "#111111",
+  "theme_color": "#111111",
   "orientation": "portrait",
   "icons": [
     {
