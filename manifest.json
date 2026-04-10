@@ -2,7 +2,7 @@
   "name": "HESAB",
   "short_name": "HESAB",
   "description": "Kalender och tidsregistrering",
-  "start_url": "./hesab-app.html",
+  "start_url": "./hesab.html",
   "display": "standalone",
   "background_color": "#111111",
   "theme_color": "#111111",
