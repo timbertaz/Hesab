@@ -1,6 +1,6 @@
 const CACHE = 'hesab-v2.0';
 const FILES = [
-  './hesab-app.html',
+  './hesab.html',
   './manifest.json',
   './icon-192.png',
   './icon-512.png'
