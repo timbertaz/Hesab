@@ -307,8 +307,8 @@ document.querySelectorAll('.tab-btn').forEach(function(btn) {
 (function() {
   var START_H = 6, END_H = 22;
   var TOTAL_SLOTS = (END_H - START_H) * 2;
-  var DAYS_SV   = ['Sön','Man','Tis','Ons','Tor','Fre','Lör'];
-  var DAYS_FULL = ['Söndag','Mandag','Tisdag','Onsdag','Torsdag','Fredag','Lördag'];
+  var DAYS_SV   = ['Sön','Mån','Tis','Ons','Tor','Fre','Lör'];
+  var DAYS_FULL = ['Söndag','Måndag','Tisdag','Onsdag','Torsdag','Fredag','Lördag'];
   var MONTHS_SV = ['januari','februari','mars','april','maj','juni','juli','augusti','september','oktober','november','december'];
 
   var currentDate = new Date();
@@ -488,7 +488,7 @@ document.querySelectorAll('.tab-btn').forEach(function(btn) {
     if (!activeSlot) return;
     var note = document.getElementById('kal-modal-input').value.trim();
     if (!note) return;
-    var daysLong = ['Söndag','Mandag','Tisdag','Onsdag','Torsdag','Fredag','Lördag'];
+    var daysLong = ['Söndag','Måndag','Tisdag','Onsdag','Torsdag','Fredag','Lördag'];
     var months = ['januari','februari','mars','april','maj','juni','juli','augusti','september','oktober','november','december'];
     var dayName = daysLong[currentDate.getDay()];
     var dateStr = currentDate.getDate() + ' ' + months[currentDate.getMonth()];
@@ -507,11 +507,12 @@ document.querySelectorAll('.tab-btn').forEach(function(btn) {
 
   renderAll();
 })();
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // ── TIDSREGISTRERING ──
-var VERSION = '2.7';
-var WHATS_NEW = ['Kalender och tidsregistrering i en app', 'SMS-bekraftelse direkt fran kalender', 'Dagplanering med 30-min tidsluckor', 'Veckovy med bokningsstatus'];
+var VERSION = '2.8';
+var WHATS_NEW = ['Kalender och tidsregistrering i en app', 'SMS-bekräftelse direkt från kalender', 'Dagplanering med 30-min tidsluckor', 'Veckoöversikt med bokningsstatus'];
 var S = [];
 var editIdx = null;
 try { S = JSON.parse(localStorage.getItem('hesab_v2') || '[]'); } catch(e) {}
@@ -522,7 +523,7 @@ function updateClock() {
   var p = function(n) { return String(n).padStart(2,'0'); };
   var el = document.getElementById('clock-time');
   if (el) el.innerHTML = p(d.getHours()) + '<span class="colon">:</span>' + p(d.getMinutes()) + '<span class="colon">:</span>' + p(d.getSeconds());
-  var days = ['Söndag','Mandag','Tisdag','Onsdag','Torsdag','Fredag','Lördag'];
+  var days = ['Söndag','Måndag','Tisdag','Onsdag','Torsdag','Fredag','Lördag'];
   var months = ['Januari','Februari','Mars','April','Maj','Juni','Juli','Augusti','September','Oktober','November','December'];
   var ed = document.getElementById('clock-date');
   if (ed) ed.textContent = days[d.getDay()] + ' ' + d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
@@ -611,14 +612,14 @@ function render() {
   var list = document.getElementById('ll');
   document.getElementById('ec').textContent = S.length;
   document.getElementById('tc').textContent = totalTime();
-  if (!S.length) { list.innerHTML = '<div class="empty">Inga registreringar annu</div>'; return; }
+  if (!S.length) { list.innerHTML = '<div class="empty">Inga registreringar ännu</div>'; return; }
   var html = '';
   for (var i = 0; i < S.length; i++) {
     var s = S[i], num = S.length - i, d = (s.start && s.stopp) ? calcDur(s.start, s.stopp) : '';
     var times = '<div class="log-times">';
     if (s.start) times += makeTimeRow('START','tag-start',s.start);
     if (s.stopp) times += makeTimeRow('STOPP','tag-stopp',s.stopp);
-    if (s.start && !s.stopp) times += '<span class="open-badge">PAGAR</span>';
+    if (s.start && !s.stopp) times += '<span class="open-badge">PÅGÅR</span>';
     times += '</div>';
     html += '<div class="log-row" onclick="openEdit(' + i + ')"><div class="log-num">' + num + '</div><div class="log-body"><div class="log-obj-name">' + esc(s.obj) + '</div>' + times + '</div><div class="' + (d ? 'log-dur has-dur' : 'log-dur') + '">' + (d || '-') + '</div><button class="log-del" onclick="deleteEntry(event,' + i + ')">&#10005;</button></div>';
   }
@@ -662,7 +663,7 @@ function exportPDF() {
   var rev = S.slice().reverse(), rows = '';
   for (var i = 0; i < rev.length; i++) {
     var s = rev[i], d = (s.start && s.stopp) ? calcDur(s.start, s.stopp) : '-';
-    rows += '<tr><td>'+(i+1)+'</td><td>'+esc(s.obj)+'</td><td>'+(s.start?s.start.time+' '+s.start.date:'-')+'</td><td>'+(s.stopp?s.stopp.time+' '+s.stopp.date:'Pagar')+'</td><td class="dur">'+d+'</td></tr>';
+    rows += '<tr><td>'+(i+1)+'</td><td>'+esc(s.obj)+'</td><td>'+(s.start?s.start.time+' '+s.start.date:'-')+'</td><td>'+(s.stopp?s.stopp.time+' '+s.stopp.date:'Pågår')+'</td><td class="dur">'+d+'</td></tr>';
   }
   var htm = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>HESAB</title><style>body{font-family:Arial,sans-serif;font-size:12px;margin:30px;color:#111}h1{font-size:22px;margin-bottom:6px}p{color:#666;font-size:11px;margin-bottom:20px}table{width:100%;border-collapse:collapse}th{background:#c0392b;color:#fff;padding:9px 12px;text-align:left;font-size:11px;text-transform:uppercase}td{padding:8px 12px;border-bottom:1px solid #e0e0e0}tr:nth-child(even) td{background:#f7f7f7}.dur{color:#b07800;font-weight:bold}</style></head><body><h1>HESAB - Tidsregistrering</h1><p>Exporterad: '+new Date().toLocaleString('sv-SE')+' | '+S.length+' objekt | Total tid: '+totalTime()+'</p><table><thead><tr><th>#</th><th>Objekt</th><th>Start</th><th>Stopp</th><th>Tid</th></tr></thead><tbody>'+rows+'</tbody></table></body></html>';
   var w = window.open('','_blank');
@@ -695,24 +696,31 @@ function showToast() {
   setTimeout(function() { toast.classList.add('show'); }, 500);
 }
 function toggleToast() { document.getElementById('update-toast').classList.toggle('expanded'); }
+var _swReg = null;
 function reloadApp() {
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.getRegistration().then(function(reg) {
-      if (reg && reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
-    });
+  if (_swReg && _swReg.waiting) {
+    _swReg.waiting.postMessage({ type: 'SKIP_WAITING' });
+  } else {
+    window.location.reload();
   }
-  window.location.reload();
 }
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js').then(function(reg) {
+    _swReg = reg;
     reg.update();
     reg.addEventListener('updatefound', function() {
       var nw = reg.installing;
       nw.addEventListener('statechange', function() {
-        if (nw.state === 'installed' && navigator.serviceWorker.controller) showToast();
+        if (nw.state === 'installed' && navigator.serviceWorker.controller) {
+          _swReg = reg;
+          showToast();
+        }
       });
     });
   }).catch(function() {});
+  navigator.serviceWorker.addEventListener('controllerchange', function() {
+    window.location.reload();
+  });
 }
 </script>
 </body>

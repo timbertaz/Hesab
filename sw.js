@@ -1,4 +1,4 @@
-const CACHE = 'hesab-v2.7';
+const CACHE = 'hesab-v2.8';
 const FILES = [
   './hesab.html',
   './manifest.json',
