@@ -488,7 +488,7 @@ document.querySelectorAll('.tab-btn').forEach(function(btn) {
     if (!activeSlot) return;
     var note = document.getElementById('kal-modal-input').value.trim();
     if (!note) return;
-    var daysLong = ['Sondag','Mandag','Tisdag','Onsdag','Torsdag','Fredag','Lordag'];
+    var daysLong = ['Söndag','Mandag','Tisdag','Onsdag','Torsdag','Fredag','Lördag'];
     var months = ['januari','februari','mars','april','maj','juni','juli','augusti','september','oktober','november','december'];
     var dayName = daysLong[currentDate.getDay()];
     var dateStr = currentDate.getDate() + ' ' + months[currentDate.getMonth()];
@@ -496,7 +496,7 @@ document.querySelectorAll('.tab-btn').forEach(function(btn) {
     var endH = activeSlot.m === 30 ? activeSlot.h + 1 : activeSlot.h;
     var endM = activeSlot.m === 30 ? 0 : 30;
     var timeEnd = slotLabel(endH, endM);
-    var msg = 'Hej! Bekraftar din tid hos HESAB:\n' + dayName + ' ' + dateStr + ' kl ' + timeStr + '-' + timeEnd + '\n' + note + '\nValkommen!';
+    var msg = 'Hej! Bekräftar din tid hos HESAB:\n' + dayName + ' ' + dateStr + ' kl ' + timeStr + '-' + timeEnd + '\n' + note + '\nVälkommen!';
     window.location.href = 'sms:?body=' + encodeURIComponent(msg);
   });
 
