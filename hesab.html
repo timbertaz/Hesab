@@ -307,8 +307,8 @@ document.querySelectorAll('.tab-btn').forEach(function(btn) {
 (function() {
   var START_H = 6, END_H = 22;
   var TOTAL_SLOTS = (END_H - START_H) * 2;
-  var DAYS_SV   = ['Son','Man','Tis','Ons','Tor','Fre','Lor'];
-  var DAYS_FULL = ['Sondag','Mandag','Tisdag','Onsdag','Torsdag','Fredag','Lordag'];
+  var DAYS_SV   = ['Sön','Man','Tis','Ons','Tor','Fre','Lör'];
+  var DAYS_FULL = ['Söndag','Mandag','Tisdag','Onsdag','Torsdag','Fredag','Lördag'];
   var MONTHS_SV = ['januari','februari','mars','april','maj','juni','juli','augusti','september','oktober','november','december'];
 
   var currentDate = new Date();
@@ -521,7 +521,7 @@ function updateClock() {
   var p = function(n) { return String(n).padStart(2,'0'); };
   var el = document.getElementById('clock-time');
   if (el) el.innerHTML = p(d.getHours()) + '<span class="colon">:</span>' + p(d.getMinutes()) + '<span class="colon">:</span>' + p(d.getSeconds());
-  var days = ['Sondag','Mandag','Tisdag','Onsdag','Torsdag','Fredag','Lordag'];
+  var days = ['Söndag','Mandag','Tisdag','Onsdag','Torsdag','Fredag','Lördag'];
   var months = ['Januari','Februari','Mars','April','Maj','Juni','Juli','Augusti','September','Oktober','November','December'];
   var ed = document.getElementById('clock-date');
   if (ed) ed.textContent = days[d.getDay()] + ' ' + d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
