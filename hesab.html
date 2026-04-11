@@ -192,6 +192,8 @@ body {
 #kal-btn-save:active { background: var(--red-dark); }
 #kal-btn-cancel { flex: 1; background: var(--border2); color: var(--text); }
 #kal-btn-delete { background: transparent; color: var(--text-muted); border: 1px solid var(--border2) !important; border-radius: 12px; font-size: 14px; font-weight: 700; font-family: 'Barlow Condensed', sans-serif; letter-spacing: 0.04em; text-transform: uppercase; cursor: pointer; padding: 0 16px; height: 46px; flex: 0 0 auto; display: none; }
+#kal-btn-sms { background: #1a3a1a; color: #6fcf6f; border: 1px solid #2a5a2a; border-radius: 12px; font-size: 14px; font-weight: 700; font-family: 'Barlow Condensed', sans-serif; letter-spacing: 0.04em; text-transform: uppercase; cursor: pointer; padding: 0 16px; height: 46px; flex: 0 0 auto; display: none; }
+#kal-btn-sms:active { background: #2a5a2a; }
 
 /* ════════════════════════════════════
    TIDSREGISTRERING VIEW
@@ -348,6 +350,7 @@ input[type="text"].err { border-color: var(--red); animation: shake .3s ease; }
     <div id="kal-modal-time"></div>
     <textarea id="kal-modal-input" placeholder="Skriv anteckning..."></textarea>
     <div id="kal-modal-actions">
+      <button id="kal-btn-sms">&#128172; SMS</button>
       <button id="kal-btn-delete">Ta bort</button>
       <button id="kal-btn-cancel">Avbryt</button>
       <button id="kal-btn-save">Spara</button>
@@ -609,6 +612,7 @@ var KAL = (function() {
     document.getElementById('kal-modal-time').textContent = slotLabel(h, m) + ' – ' + slotLabel(endH, endM);
     document.getElementById('kal-modal-input').value = note;
     document.getElementById('kal-btn-delete').style.display = note ? 'block' : 'none';
+    document.getElementById('kal-btn-sms').style.display = note ? 'block' : 'none';
     document.getElementById('kal-modal-bg').classList.add('open');
     setTimeout(function(){ document.getElementById('kal-modal-input').focus(); }, 150);
   }
@@ -633,6 +637,25 @@ var KAL = (function() {
     delete notes[slotKey(activeSlot.h, activeSlot.m)];
     saveNotes(currentDate, notes);
     closeModal(); renderAll();
+  });
+  document.getElementById('kal-btn-sms').addEventListener('click', function() {
+    if (!activeSlot) return;
+    var note = document.getElementById('kal-modal-input').value.trim();
+    if (!note) return;
+    var DAYS_FULL_SMS = ['Söndag','Måndag','Tisdag','Onsdag','Torsdag','Fredag','Lördag'];
+    var MONTHS_SMS = ['januari','februari','mars','april','maj','juni','juli','augusti','september','oktober','november','december'];
+    var d = currentDate;
+    var dayName = DAYS_FULL_SMS[d.getDay()];
+    var dateStr = d.getDate() + ' ' + MONTHS_SMS[d.getMonth()];
+    var timeStr = slotLabel(activeSlot.h, activeSlot.m);
+    var endH = activeSlot.m === 30 ? activeSlot.h + 1 : activeSlot.h;
+    var endM = activeSlot.m === 30 ? 0 : 30;
+    var timeEnd = slotLabel(endH, endM);
+    var msg = 'Hej! Bekräftar din tid hos HESAB:
+' + dayName + ' ' + dateStr + ' kl ' + timeStr + '–' + timeEnd + '
+' + note + '
+Välkommen!';
+    window.location.href = 'sms:?body=' + encodeURIComponent(msg);
   });
   document.getElementById('kal-btn-cancel').addEventListener('click', closeModal);
   document.getElementById('kal-modal-bg').addEventListener('click', function(e){ if (e.target === this) closeModal(); });
