@@ -55,7 +55,7 @@ body { background: var(--black); color: var(--text); font-family: 'Barlow', Aria
 #scroll-area { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; background: var(--black); }
 #scroll-area::-webkit-scrollbar { width: 2px; }
 #scroll-area::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
-.slot { display: flex; min-height: 50px; border-bottom: 1px solid var(--border); cursor: pointer; }
+.slot { display: flex; min-height: 38px; border-bottom: 1px solid var(--border); cursor: pointer; }
 .slot.hour-start { border-top: 1px solid var(--border2); }
 .slot:active { background: var(--surface2); }
 .slot.has-note { background: var(--surface); }
@@ -318,8 +318,8 @@ document.querySelectorAll('.tab-btn').forEach(function(btn) {
   function dateKey(d) { return d.toISOString().slice(0,10); }
   function loadNotes(d) { try { return JSON.parse(localStorage.getItem('hesab_dag_' + dateKey(d)) || '{}'); } catch(e) { return {}; } }
   function saveNotes(d, notes) { localStorage.setItem('hesab_dag_' + dateKey(d), JSON.stringify(notes)); }
-  function slotKey(h, m) { return h + ':' + (m === 0 ? '00' : '30'); }
-  function slotLabel(h, m) { return String(h).padStart(2,'0') + ':' + (m === 0 ? '00' : '30'); }
+  function slotKey(h, m) { return h + ':' + String(m).padStart(2,'0'); }
+  function slotLabel(h, m) { return String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0'); }
 
   function getWeekNumber(d) {
     var date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
@@ -410,14 +410,14 @@ document.querySelectorAll('.tab-btn').forEach(function(btn) {
     var now = new Date();
     var scrollTarget = null;
     for (var h = START_H; h < END_H; h++) {
-      for (var m = 0; m < 60; m += 30) {
+      for (var m = 0; m < 60; m += 15) {
         var key = slotKey(h, m);
         var note = notes[key] || '';
         var div = document.createElement('div');
-        div.className = 'slot' + (m === 0 ? ' hour-start' : '') + (note ? ' has-note' : '');
+        div.className = 'slot' + (m === 0 ? ' hour-start' : '' ) + (note ? ' has-note' : '');
         var timeDiv = document.createElement('div');
         timeDiv.className = 'time-col';
-        timeDiv.textContent = m === 0 ? slotLabel(h, m) : '';
+        timeDiv.textContent = m === 0 ?  slotLabel(h, m) : '' ;
         var ind = document.createElement('div');
         ind.className = 'note-indicator';
         var noteDiv = document.createElement('div');
@@ -448,8 +448,9 @@ document.querySelectorAll('.tab-btn').forEach(function(btn) {
 
   function openModal(h, m, note) {
     activeSlot = { h: h, m: m };
-    var endH = m === 30 ? h + 1 : h;
-    var endM = m === 30 ? 0 : 30;
+    var endM15 = m + 15;
+    var endH = endM15 >= 60 ? h + 1 : h;
+    var endM = endM15 >= 60 ? endM15 - 60 : endM15;
     document.getElementById('kal-modal-time').textContent = slotLabel(h, m) + ' - ' + slotLabel(endH, endM);
     document.getElementById('kal-modal-input').value = note;
     var hasNote = note.length > 0;
@@ -493,8 +494,9 @@ document.querySelectorAll('.tab-btn').forEach(function(btn) {
     var dayName = daysLong[currentDate.getDay()];
     var dateStr = currentDate.getDate() + ' ' + months[currentDate.getMonth()];
     var timeStr = slotLabel(activeSlot.h, activeSlot.m);
-    var endH = activeSlot.m === 30 ? activeSlot.h + 1 : activeSlot.h;
-    var endM = activeSlot.m === 30 ? 0 : 30;
+    var endM15 = activeSlot.m + 15;
+    var endH = endM15 >= 60 ? activeSlot.h + 1 : activeSlot.h;
+    var endM = endM15 >= 60 ? endM15 - 60 : endM15;
     var timeEnd = slotLabel(endH, endM);
     var msg = 'Hej! Bekräftar din tid hos HESAB:\n' + dayName + ' ' + dateStr + ' kl ' + timeStr + '-' + timeEnd + '\n' + note + '\nVälkommen!';
     window.location.href = 'sms:?body=' + encodeURIComponent(msg);
@@ -507,11 +509,9 @@ document.querySelectorAll('.tab-btn').forEach(function(btn) {
 
   renderAll();
 })();
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // ── TIDSREGISTRERING ──
-var VERSION = '2.8';
+var VERSION = '3.0';
 var WHATS_NEW = ['Kalender och tidsregistrering i en app', 'SMS-bekräftelse direkt från kalender', 'Dagplanering med 30-min tidsluckor', 'Veckoöversikt med bokningsstatus'];
 var S = [];
 var editIdx = null;
