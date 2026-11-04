@@ -2,7 +2,7 @@
 <html lang="sv">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#111111">
@@ -75,7 +75,8 @@ body {
 #date-label { font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 700; color: #fff; letter-spacing: 0.04em; text-transform: uppercase; }
 #date-sub { font-size: 12px; color: rgba(255,255,255,0.7); }
 #week-num { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.5); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 1px; }
-#nav-btns { display: flex; gap: 6px; }
+#nav-btns { display: flex; gap: 6px; align-items: center; }
+#zoom-btn { font-family: 'Barlow Condensed', sans-serif; font-size: 15px; font-weight: 900; letter-spacing: 0; min-width: 36px; }
 #nav-btns button {
   background: rgba(255,255,255,0.15);
   border: none; color: #fff;
@@ -160,6 +161,18 @@ body {
 .has-note .note-indicator { display: block; }
 .slot-continuation .note-indicator { display: block; background: #4a1a1a; }
 .note-text { font-size: 15px; font-weight: 500; color: var(--text); line-height: 1.35; word-break: break-word; width: 100%; }
+
+/* zoom sizes */
+body.zoom-lg .slot { min-height: 48px; }
+body.zoom-lg .slot.hour-start { min-height: 58px; }
+body.zoom-lg .time-col { font-size: 16px; width: 68px; }
+body.zoom-lg .time-col-sub { font-size: 12px; }
+body.zoom-lg .note-text { font-size: 18px; }
+body.zoom-xl .slot { min-height: 62px; }
+body.zoom-xl .slot.hour-start { min-height: 74px; }
+body.zoom-xl .time-col { font-size: 19px; width: 78px; }
+body.zoom-xl .time-col-sub { font-size: 14px; }
+body.zoom-xl .note-text { font-size: 22px; }
 
 /* kalender modal */
 #kal-modal-bg {
@@ -335,6 +348,7 @@ input[type="text"].err { border-color: var(--red); animation: shake .3s ease; }
     <div id="nav-btns">
       <button id="prev">&#8249;</button>
       <button id="next">&#8250;</button>
+      <button id="zoom-btn" title="Textstorlek">A</button>
     </div>
   </div>
   <div id="week-strip"></div>
@@ -763,6 +777,25 @@ var KAL = (function() {
   document.getElementById('prev').addEventListener('click', function(){ currentDate.setDate(currentDate.getDate() - 7); renderAll(); });
   document.getElementById('next').addEventListener('click', function(){ currentDate.setDate(currentDate.getDate() + 7); renderAll(); });
 
+  // ── Zoom ──
+  var ZOOM_LEVELS = ['normal', 'lg', 'xl'];
+  var ZOOM_LABELS = ['A', 'A+', 'A++'];
+  var currentZoom = localStorage.getItem('hesab_zoom') || 'normal';
+  function applyZoom(level) {
+    document.body.classList.remove('zoom-lg', 'zoom-xl');
+    if (level === 'lg') document.body.classList.add('zoom-lg');
+    if (level === 'xl') document.body.classList.add('zoom-xl');
+    var idx = ZOOM_LEVELS.indexOf(level);
+    document.getElementById('zoom-btn').textContent = ZOOM_LABELS[idx];
+    localStorage.setItem('hesab_zoom', level);
+    currentZoom = level;
+  }
+  applyZoom(currentZoom);
+  document.getElementById('zoom-btn').addEventListener('click', function() {
+    var idx = ZOOM_LEVELS.indexOf(currentZoom);
+    applyZoom(ZOOM_LEVELS[(idx + 1) % ZOOM_LEVELS.length]);
+  });
+
   renderAll();
   return { renderAll: renderAll };
 })();
@@ -770,7 +803,7 @@ var KAL = (function() {
 // ════════════════════════════════════
 // TIDSREGISTRERING
 // ════════════════════════════════════
-var VERSION = '3.1';
+var VERSION = '3.2';
 var WHATS_NEW = ['15-min tidsluckor i kalendern',':15 :30 :45 markerade i tidskolumnen','Flerspann-bokningar (15 min – 2 tim)','Veckovy med bokningsstatus'];
 
 var S = [];
